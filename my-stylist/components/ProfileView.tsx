@@ -4,6 +4,7 @@ import { DRAPES, tileStyle } from "@/lib/color";
 import { findEntry, learnHref, type SystemId } from "@/lib/learn";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
+import InstallPrompt from "./InstallPrompt";
 import { Confidence, DemoNote, DimensionBar, ErrorBox, Section, Swatches } from "./ui";
 
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void; restart: () => void };
@@ -56,6 +57,7 @@ export default function ProfileView({ state, update, restart }: Props) {
         </div>
       </div>
       <DemoNote show={state.demo} />
+      <InstallPrompt />
       {state.source === "quiz" && (
         <div className="notice row between" style={{ marginTop: 12 }}>
           <span>From your quiz answers. Photos give a more precise color reading.</span>

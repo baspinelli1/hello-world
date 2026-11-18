@@ -2,7 +2,7 @@ import { askWithWebSearch, isDemo, jsonError } from "@/lib/claude";
 import { demoTrends } from "@/lib/demo";
 import { STYLIST_VOICE } from "@/lib/prompts";
 
-export const maxDuration = 180;
+export const maxDuration = 60;
 
 export async function GET() {
   try {

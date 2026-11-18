@@ -1,5 +1,5 @@
 // Reads a PUBLIC Pinterest board through its RSS feed, no Pinterest login needed.
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 function feedUrl(input: string): string | null {
   try {

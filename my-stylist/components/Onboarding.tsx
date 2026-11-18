@@ -3,6 +3,7 @@ import { useState } from "react";
 import { fileToDataUrl } from "@/lib/image";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
+import InstallPrompt from "./InstallPrompt";
 import Quiz from "./Quiz";
 import { QUESTIONS } from "@/lib/quiz";
 
@@ -67,6 +68,7 @@ export default function Onboarding({ state, update }: Props) {
           <span className="small muted">No photos. {QUIZ_COUNT} quick taps. About 3 minutes.</span>
         </button>
         <p className="muted small" style={{ textAlign: "center" }}><a href="/learn/how-it-works" className="linkish">How does it work?</a></p>
+        <InstallPrompt />
       </div>
     );
   }

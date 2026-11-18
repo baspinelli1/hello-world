@@ -3,7 +3,7 @@ import { demoCritique } from "@/lib/demo";
 import { CRITIQUE_SYSTEM } from "@/lib/prompts";
 import { CritiqueSchema } from "@/lib/schemas";
 
-export const maxDuration = 180;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {

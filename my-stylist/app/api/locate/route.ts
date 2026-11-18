@@ -3,7 +3,7 @@ import { demoLocate } from "@/lib/demo";
 import { LOCATE_SYSTEM } from "@/lib/prompts";
 import { PhotoLocateSchema } from "@/lib/schemas";
 
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {

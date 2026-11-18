@@ -4,9 +4,20 @@ import type { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "My Stylist",
   description: "A technical AI stylist: your color season, body type and style essence, with outfits made for you.",
+  applicationName: "My Stylist",
+  appleWebApp: { capable: true, title: "My Stylist", statusBarStyle: "default" },
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#FFF8F0" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFF8F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#141210" },
+  ],
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

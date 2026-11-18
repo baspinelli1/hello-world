@@ -3,7 +3,7 @@ import { demoLooks } from "@/lib/demo";
 import { LOOKS_SYSTEM } from "@/lib/prompts";
 import { LooksSchema } from "@/lib/schemas";
 
-export const maxDuration = 180;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {

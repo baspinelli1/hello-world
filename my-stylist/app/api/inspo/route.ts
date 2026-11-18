@@ -3,7 +3,7 @@ import { demoInspo } from "@/lib/demo";
 import { INSPO_SYSTEM } from "@/lib/prompts";
 import { InspoSchema } from "@/lib/schemas";
 
-export const maxDuration = 240;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {

@@ -4,7 +4,7 @@ import { demoProfile } from "@/lib/demo";
 import { ANALYZE_SYSTEM } from "@/lib/prompts";
 import { ProfileSchema } from "@/lib/schemas";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 type Body = {
   height: string;

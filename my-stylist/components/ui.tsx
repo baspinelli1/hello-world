@@ -72,3 +72,4 @@ export function Confidence({ level, runnerUp }: { level: string; runnerUp?: stri
     </span>
   );
 }
+

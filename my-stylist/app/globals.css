@@ -161,3 +161,16 @@ details summary { cursor: pointer; font-weight: 600; }
 .hero-dots span:nth-child(3) { background: var(--pop-3); }
 .tab .ico { position: relative; }
 .tab .count { position: absolute; top: -4px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-size: 11px; line-height: 18px; font-weight: 700; }
+
+/* Learn section */
+.badge.you { background: var(--ink); color: var(--bg); vertical-align: middle; margin-left: 6px; font-size: 10px; }
+.strip { display: flex; height: 14px; border-radius: 99px; overflow: hidden; width: 200px; max-width: 100%; }
+.strip span { flex: 1; }
+a.tile, a.card { transition: transform .12s ease; }
+a.tile:active, a.card:active { transform: scale(0.98); }
+.numbered { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+.numbered li { counter-increment: step; position: relative; padding-left: 64px; }
+.numbered li::before { content: counter(step); position: absolute; left: 18px; top: 18px; width: 32px; height: 32px; border-radius: 50%; background: var(--pop-3); color: var(--pop-3-ink); border: 2px solid var(--ink); display: grid; place-items: center; font-family: var(--display); font-weight: 800; }
+.typegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.typegrid .tile, .typegrid .tile:first-child { grid-column: auto; min-height: 112px; padding: 14px; }
+.typegrid .kicker { font-size: 10px; letter-spacing: 0.1em; }

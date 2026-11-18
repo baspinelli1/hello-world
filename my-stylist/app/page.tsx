@@ -45,7 +45,7 @@ export default function Home() {
     <main className="shell">
       <header className="masthead">
         <p className="brand">My <em>Stylist</em></p>
-        {state.profile && <span className="kicker">{state.profile.color.season}</span>}
+        <a href="/learn" className="kicker" style={{ textDecoration: "none" }}>Learn</a>
       </header>
       {!state.profile ? (
         <Onboarding state={state} update={update} />

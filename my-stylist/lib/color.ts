@@ -301,3 +301,11 @@ export const DRAPES: { id: string; hex: string; name: string; tests: string }[] 
   { id: "O", hex: "#C9A227", name: "gold", tests: "metal: warm" },
   { id: "P", hex: "#C3C7CC", name: "silver", tests: "metal: cool" },
 ];
+
+/** A block painted in a palette color, with dark or light text chosen for readability. */
+export function tileStyle(hex?: string) {
+  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return undefined;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return { background: hex, color: lum > 0.22 ? "#1B1712" : "#FFFFFF" };
+}

@@ -1,18 +1,18 @@
 "use client";
 import { useState } from "react";
-import { DRAPES } from "@/lib/color";
+import { DRAPES, tileStyle } from "@/lib/color";
+import { findEntry, learnHref, type SystemId } from "@/lib/learn";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
 import { Confidence, DemoNote, DimensionBar, ErrorBox, Section, Swatches } from "./ui";
 
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void; restart: () => void };
 
-// The Color tile is painted in the user's own best color, with readable text on top.
-function tileStyle(hex?: string) {
-  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return undefined;
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return { background: hex, color: lum > 0.5 ? "#1B1712" : "#FFFFFF" };
+function LearnLink({ system, name }: { system: SystemId; name: string }) {
+  const e = findEntry(system, name);
+  if (!e) return null;
+  const what = system === "seasons" ? `a ${e.name}` : system === "kibbe" ? `a ${e.name} body type` : `a ${e.name} essence`;
+  return <p className="small" style={{ margin: "6px 0 0" }}><a className="linkish" href={learnHref(system, e.slug)}>What does it mean to be {what}? →</a></p>;
 }
 
 export default function ProfileView({ state, update, restart }: Props) {
@@ -61,6 +61,7 @@ export default function ProfileView({ state, update, restart }: Props) {
       <div id="color" />
       <Section kicker="Color" title={p.color.season}>
         <Confidence level={p.color.confidence} runnerUp={p.color.runner_up} />
+        <LearnLink system="seasons" name={p.color.season} />
         <div className="dims" style={{ margin: "16px 0" }}>
           <DimensionBar dim="hue" value={p.color.dimensions.hue} />
           <DimensionBar dim="value" value={p.color.dimensions.value} />
@@ -138,6 +139,7 @@ export default function ProfileView({ state, update, restart }: Props) {
       <div id="body" />
       <Section kicker="Body · Kibbe" title={p.body.kibbe_type}>
         <Confidence level={p.body.confidence} runnerUp={p.body.runner_up} />
+        <LearnLink system="kibbe" name={p.body.kibbe_type} />
         <div className="grid2" style={{ marginTop: 12 }}>
           <div><h3>Wear</h3><ul>{p.body.lines_that_work.map((x) => <li key={x}>{x}</li>)}</ul></div>
           <div><h3>Skip</h3><ul>{p.body.lines_to_avoid.map((x) => <li key={x}>{x}</li>)}</ul></div>
@@ -149,6 +151,7 @@ export default function ProfileView({ state, update, restart }: Props) {
       <div id="essence" />
       <Section kicker="Essence · Kitchener" title={`${p.essence.primary}${p.essence.secondary && p.essence.secondary !== "none" ? ` + ${p.essence.secondary}` : ""}`}>
         <Confidence level={p.essence.confidence} />
+        <LearnLink system="essences" name={p.essence.primary} />
         <div className="row" style={{ margin: "12px 0" }}>{p.essence.keywords.map((k) => <span key={k} className="badge">{k}</span>)}</div>
         <ul>{p.essence.details_that_express_it.map((x) => <li key={x}>{x}</li>)}</ul>
         <details className="more"><summary>Why this essence</summary><p className="small" style={{ marginTop: 6 }}>{p.essence.reasoning}</p></details>

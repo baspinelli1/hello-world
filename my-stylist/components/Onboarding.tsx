@@ -60,6 +60,7 @@ export default function Onboarding({ state, update }: Props) {
           <div><strong>3.</strong> One selfie holding white paper, for true-to-life color</div>
         </div>
         <button className="btn accent block" onClick={() => setStep("height")}>Start</button>
+        <p className="muted small" style={{ textAlign: "center" }}><a href="/learn/how-it-works" className="linkish">How does it work?</a></p>
       </div>
     );
   }

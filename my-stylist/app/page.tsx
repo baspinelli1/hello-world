@@ -60,8 +60,10 @@ export default function Home() {
             <nav>
               {TABS.map((t) => (
                 <button key={t.id} className={`tab${tab === t.id ? " on" : ""}`} onClick={() => { setTab(t.id); window.scrollTo(0, 0); }}>
-                  <span className="ico" aria-hidden>{t.ico}</span>{t.label}
-                  {t.id === "shop" && state.shopping.filter((i) => !i.bought).length > 0 && <span className="small">({state.shopping.filter((i) => !i.bought).length})</span>}
+                  <span className="ico" aria-hidden>
+                    {t.ico}
+                    {t.id === "shop" && state.shopping.filter((i) => !i.bought).length > 0 && <span className="count">{state.shopping.filter((i) => !i.bought).length}</span>}
+                  </span>{t.label}
                 </button>
               ))}
             </nav>

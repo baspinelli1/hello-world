@@ -7,6 +7,14 @@ import { Confidence, DemoNote, DimensionBar, ErrorBox, Section, Swatches } from 
 
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void; restart: () => void };
 
+// The Color tile is painted in the user's own best color, with readable text on top.
+function tileStyle(hex?: string) {
+  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return undefined;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return { background: hex, color: lum > 0.5 ? "#1B1712" : "#FFFFFF" };
+}
+
 export default function ProfileView({ state, update, restart }: Props) {
   const p = state.profile!;
   const m = state.engine?.measurements;
@@ -31,21 +39,27 @@ export default function ProfileView({ state, update, restart }: Props) {
 
   return (
     <div>
-      <div style={{ padding: "28px 0 6px" }}>
-        <div className="kicker">Your style profile</div>
+      <div style={{ padding: "18px 0 6px" }}>
+        <div className="kicker">Your style</div>
         <h1>{p.summary.headline}</h1>
         <p className="lede">{p.summary.style_formula}</p>
-        <div className="row" style={{ marginTop: 10 }}>
-          <span className="badge accent">{p.color.season}</span>
-          <span className="badge accent">{p.body.kibbe_type}</span>
-          <span className="badge accent">{p.essence.primary}{p.essence.secondary && p.essence.secondary !== "none" ? ` + ${p.essence.secondary}` : ""}</span>
-          {p.color.is_olive && <span className="badge good">Olive complexion</span>}
+        <div className="tiles">
+          <a className="tile c1" href="#color" style={tileStyle(p.color.palette.core[0]?.hex)}>
+            <span className="kicker">Your color{p.color.is_olive ? " · olive" : ""}</span>
+            <div>
+              <strong>{p.color.season}</strong>
+              <div className="mini">{p.color.palette.core.slice(0, 6).map((c) => <span key={c.hex} style={{ background: c.hex }} />)}</div>
+            </div>
+          </a>
+          <a className="tile c2" href="#body"><span className="kicker">Body</span><strong>{p.body.kibbe_type}</strong></a>
+          <a className="tile c3" href="#essence"><span className="kicker">Essence</span><strong>{p.essence.primary}{p.essence.secondary && p.essence.secondary !== "none" ? ` + ${p.essence.secondary}` : ""}</strong></a>
         </div>
       </div>
       <DemoNote show={state.demo} />
       {p.photo_feedback && <div className="notice" style={{ marginTop: 12 }}>{p.photo_feedback}</div>}
 
-      <Section kicker="Color analysis" title={p.color.season}>
+      <div id="color" />
+      <Section kicker="Color" title={p.color.season}>
         <Confidence level={p.color.confidence} runnerUp={p.color.runner_up} />
         <div className="dims" style={{ margin: "16px 0" }}>
           <DimensionBar dim="hue" value={p.color.dimensions.hue} />
@@ -54,7 +68,7 @@ export default function ProfileView({ state, update, restart }: Props) {
           <DimensionBar dim="contrast" value={p.color.dimensions.contrast} />
         </div>
         <p>{p.color.undertone_explained}</p>
-        <p className="muted small"><strong>Why other apps may have got this wrong:</strong> {p.color.why_other_apps_may_differ}</p>
+        <details className="more"><summary>Why other apps may have got this wrong</summary><p className="small" style={{ marginTop: 6 }}>{p.color.why_other_apps_may_differ}</p></details>
 
         <h3 style={{ marginTop: 20 }}>Your palette</h3>
         <div className="stack">
@@ -63,15 +77,17 @@ export default function ProfileView({ state, update, restart }: Props) {
           <div><div className="kicker" style={{ marginBottom: 8 }}>Accents</div><Swatches colors={p.color.palette.accents} /></div>
           <div><div className="kicker" style={{ marginBottom: 8 }}>Colors that work against you</div><Swatches colors={p.color.palette.avoid} avoid /></div>
         </div>
-        <div className="grid2" style={{ marginTop: 16 }}>
-          <div className="card flat small" style={{ margin: 0 }}><strong>Metals</strong><br />{p.color.metals}</div>
-          <div className="card flat small" style={{ margin: 0 }}><strong>Makeup</strong><br />{p.color.makeup_hints}</div>
-        </div>
-        <div className="card flat small"><strong>☀️ Tan season vs paler months</strong><br />{p.color.tan_mode}</div>
+        <details className="more"><summary>Metals, makeup and tan season</summary>
+          <div className="stack small" style={{ marginTop: 8 }}>
+            <div><strong>Metals:</strong> {p.color.metals}</div>
+            <div><strong>Makeup:</strong> {p.color.makeup_hints}</div>
+            <div><strong>Tanned vs paler:</strong> {p.color.tan_mode}</div>
+          </div>
+        </details>
       </Section>
 
       {Object.keys(tiles).length > 0 && (
-        <Section kicker="Virtual draping" title="What the drapes showed">
+        <Section kicker="Virtual draping" title="Your color test">
           <p>{p.color.drape_results.observations}</p>
           <div className="kicker" style={{ margin: "14px 0 8px" }}>Lit you up</div>
           <div className="drapes">
@@ -119,21 +135,23 @@ export default function ProfileView({ state, update, restart }: Props) {
         </section>
       )}
 
-      <Section kicker="Body lines · Kibbe" title={p.body.kibbe_type}>
+      <div id="body" />
+      <Section kicker="Body · Kibbe" title={p.body.kibbe_type}>
         <Confidence level={p.body.confidence} runnerUp={p.body.runner_up} />
-        <p style={{ marginTop: 10 }}>{p.body.reasoning}</p>
-        <div className="grid2">
-          <div><h3>Lines that work</h3><ul>{p.body.lines_that_work.map((x) => <li key={x}>{x}</li>)}</ul></div>
-          <div><h3>Lines that fight you</h3><ul>{p.body.lines_to_avoid.map((x) => <li key={x}>{x}</li>)}</ul></div>
+        <div className="grid2" style={{ marginTop: 12 }}>
+          <div><h3>Wear</h3><ul>{p.body.lines_that_work.map((x) => <li key={x}>{x}</li>)}</ul></div>
+          <div><h3>Skip</h3><ul>{p.body.lines_to_avoid.map((x) => <li key={x}>{x}</li>)}</ul></div>
         </div>
         <p className="small"><strong>Fabrics:</strong> {p.body.fabrics.join(", ")}</p>
+        <details className="more"><summary>Why this type</summary><p className="small" style={{ marginTop: 6 }}>{p.body.reasoning}</p></details>
       </Section>
 
-      <Section kicker="Style essence · Kitchener" title={`${p.essence.primary}${p.essence.secondary && p.essence.secondary !== "none" ? ` + ${p.essence.secondary}` : ""}`}>
+      <div id="essence" />
+      <Section kicker="Essence · Kitchener" title={`${p.essence.primary}${p.essence.secondary && p.essence.secondary !== "none" ? ` + ${p.essence.secondary}` : ""}`}>
         <Confidence level={p.essence.confidence} />
-        <p style={{ marginTop: 10 }}>{p.essence.reasoning}</p>
-        <div className="row">{p.essence.keywords.map((k) => <span key={k} className="badge">{k}</span>)}</div>
+        <div className="row" style={{ margin: "12px 0" }}>{p.essence.keywords.map((k) => <span key={k} className="badge">{k}</span>)}</div>
         <ul>{p.essence.details_that_express_it.map((x) => <li key={x}>{x}</li>)}</ul>
+        <details className="more"><summary>Why this essence</summary><p className="small" style={{ marginTop: 6 }}>{p.essence.reasoning}</p></details>
       </Section>
 
       <Section kicker="Putting it together" title="Your signature">
@@ -141,17 +159,18 @@ export default function ProfileView({ state, update, restart }: Props) {
         <ul>{p.summary.signature_pieces.map((x) => <li key={x}>{x}</li>)}</ul>
         <h3>Prints & textures</h3>
         <ul>{p.summary.prints_and_textures.map((x) => <li key={x}>{x}</li>)}</ul>
-        <h3>Brands to explore</h3>
-        {p.summary.brands.map((b) => (
-          <div className="item" key={b.name}>
-            <div className="grow"><strong>{b.name}</strong> <span className="muted small">{b.price}</span><div className="muted small">{b.why}</div></div>
-          </div>
-        ))}
+        <details className="more"><summary><strong style={{ color: "var(--ink)", fontSize: 16 }}>Brands to explore ({p.summary.brands.length})</strong></summary>
+          {p.summary.brands.map((b) => (
+            <div className="item" key={b.name}>
+              <div className="grow"><strong>{b.name}</strong> <span className="muted small">{b.price}</span><div className="muted small">{b.why}</div></div>
+            </div>
+          ))}
+        </details>
       </Section>
 
-      <section className="card">
-        <h3>Doesn't feel right?</h3>
-        <p className="muted small">Tell me what feels off and I'll look at the evidence again. I'll only change the answer if the evidence supports it.</p>
+      <details className="card">
+        <summary><strong>Doesn't feel right?</strong></summary>
+        <p className="muted small" style={{ marginTop: 10 }}>Tell me what feels off and I'll look at the evidence again. I'll only change the answer if the evidence supports it.</p>
         <textarea className="input" rows={3} placeholder="e.g. I've been draped as a Winter in person, and warm colors make me look tired" value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="row" style={{ marginTop: 10 }}>
           <button className="btn" disabled={!note.trim() || refining !== null} onClick={refine}>
@@ -160,7 +179,7 @@ export default function ProfileView({ state, update, restart }: Props) {
           <button className="btn ghost" onClick={restart}>Start over with new photos</button>
         </div>
         <div style={{ marginTop: 10 }}><ErrorBox error={error} /></div>
-      </section>
+      </details>
     </div>
   );
 }

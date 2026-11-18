@@ -51,11 +51,9 @@ export default function Onboarding({ state, update }: Props) {
   if (step === "welcome") {
     return (
       <div className="stack" style={{ paddingTop: 36 }}>
-        <div className="kicker">Your personal technical stylist</div>
-        <h1>Find the style that was made for you.</h1>
-        <p className="lede">
-          Professional color analysis, body lines and style essence, worked out from a few photos. It takes about two minutes, and everything stays on your device.
-        </p>
+        <div className="hero-dots" aria-hidden><span /><span /><span /></div>
+        <h1>Find the style made for you.</h1>
+        <p className="lede">Your colors, your body lines and your style essence, from a few photos. About two minutes.</p>
         <div className="card flat stack small">
           <div><strong>1.</strong> Your height</div>
           <div><strong>2.</strong> 6–10 photos from your camera roll</div>

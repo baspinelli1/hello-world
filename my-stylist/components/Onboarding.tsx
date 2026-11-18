@@ -3,12 +3,16 @@ import { useState } from "react";
 import { fileToDataUrl } from "@/lib/image";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
+import Quiz from "./Quiz";
+import { QUESTIONS } from "@/lib/quiz";
+
+const QUIZ_COUNT = QUESTIONS.length;
 import { ErrorBox } from "./ui";
 
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void };
 
 export default function Onboarding({ state, update }: Props) {
-  const [step, setStep] = useState<"welcome" | "height" | "photos" | "calibrate" | "analyzing">("welcome");
+  const [step, setStep] = useState<"welcome" | "quiz" | "height" | "photos" | "calibrate" | "analyzing">("welcome");
   const [unit, setUnit] = useState<"ftin" | "cm">("ftin");
   const [ft, setFt] = useState(""), [inch, setInch] = useState(""), [cm, setCm] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
@@ -42,7 +46,7 @@ export default function Onboarding({ state, update }: Props) {
     try {
       const out = await runAnalysis(next, setProgress);
       setMissing(out.missing);
-      update({ height, photos, profile: out.profile, engine: out.engine, demo: out.demo });
+      update({ height, photos, profile: out.profile, engine: out.engine, demo: out.demo, source: "photos" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     }
@@ -53,15 +57,26 @@ export default function Onboarding({ state, update }: Props) {
       <div className="stack" style={{ paddingTop: 36 }}>
         <div className="hero-dots" aria-hidden><span /><span /><span /></div>
         <h1>Find the style made for you.</h1>
-        <p className="lede">Your colors, your body lines and your style essence, from a few photos. About two minutes.</p>
-        <div className="card flat stack small">
-          <div><strong>1.</strong> Your height</div>
-          <div><strong>2.</strong> 6–10 photos from your camera roll</div>
-          <div><strong>3.</strong> One selfie holding white paper, for true-to-life color</div>
-        </div>
-        <button className="btn accent block" onClick={() => setStep("height")}>Start</button>
+        <p className="lede">Your colors, your body lines and your style essence. Pick how you'd like to start.</p>
+        <button className="choice primary" onClick={() => setStep("height")}>
+          <strong>Analyze my photos</strong>
+          <span className="small">Most accurate. Your height, a few photos and one selfie with white paper. About 2 minutes.</span>
+        </button>
+        <button className="choice" onClick={() => setStep("quiz")}>
+          <strong>Take the quiz</strong>
+          <span className="small muted">No photos. {QUIZ_COUNT} quick taps. About 3 minutes.</span>
+        </button>
         <p className="muted small" style={{ textAlign: "center" }}><a href="/learn/how-it-works" className="linkish">How does it work?</a></p>
       </div>
+    );
+  }
+
+  if (step === "quiz") {
+    return (
+      <Quiz
+        onExit={() => setStep("welcome")}
+        onDone={(profile, quizAnswers, h) => update({ profile, quizAnswers, height: h, source: "quiz", demo: false, engine: null })}
+      />
     );
   }
 

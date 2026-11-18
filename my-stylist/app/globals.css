@@ -174,3 +174,19 @@ a.tile:active, a.card:active { transform: scale(0.98); }
 .typegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 .typegrid .tile, .typegrid .tile:first-child { grid-column: auto; min-height: 112px; padding: 14px; }
 .typegrid .kicker { font-size: 10px; letter-spacing: 0.1em; }
+
+/* Quiz */
+.progress { height: 8px; border-radius: 99px; background: var(--surface-2); margin: 12px 0 18px; overflow: hidden; }
+.progress span { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .25s ease; }
+.badge.part.c1 { background: var(--pop-1); color: var(--pop-1-ink); }
+.badge.part.c2 { background: var(--pop-2); color: var(--pop-2-ink); }
+.badge.part.c3 { background: var(--pop-3); color: var(--pop-3-ink); }
+.answers { display: grid; gap: 10px; margin-top: 16px; }
+.answer { display: flex; align-items: center; gap: 14px; text-align: left; padding: 15px 16px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 600; transition: border-color .12s, transform .1s; }
+.answer:hover { border-color: var(--ink); }
+.answer:active { transform: scale(0.99); }
+.answer.on { border-color: var(--ink); background: var(--pop-3); color: var(--pop-3-ink); }
+.answer .sw { width: 34px; height: 34px; border-radius: 50%; flex: none; border: 1.5px solid var(--line); }
+.choice { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 18px; border-radius: var(--radius); border: 2px solid var(--ink); cursor: pointer; background: var(--surface); }
+.choice strong { font-family: var(--display); font-size: 22px; letter-spacing: -0.02em; }
+.choice.primary { background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--ink); }

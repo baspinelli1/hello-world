@@ -20,6 +20,8 @@ export type AppState = {
   height: string;
   photos: string[];
   profile: Profile | null;
+  source: "photos" | "quiz" | null;
+  quizAnswers: Record<string, number> | null;
   engine: Omit<EngineResult, "drapeGrid"> | null;
   demo: boolean;
   looks: Look[];
@@ -33,7 +35,7 @@ export type AppState = {
 };
 
 export const emptyState: AppState = {
-  height: "", photos: [], profile: null, engine: null, demo: false, looks: [], liked: [], disliked: [],
+  height: "", photos: [], profile: null, source: null, quizAnswers: null, engine: null, demo: false, looks: [], liked: [], disliked: [],
   owned: [], shopping: [], journal: [], trends: null, inspo: null,
 };
 

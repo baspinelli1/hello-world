@@ -35,7 +35,7 @@ export default function Home() {
 
   async function restart() {
     if (!confirm("Start over? Your profile and photos on this device will be cleared. Your looks and shopping list stay.")) return;
-    update({ profile: null, engine: null, photos: [] });
+    update({ profile: null, engine: null, photos: [], source: null, quizAnswers: null });
     setTab("profile");
   }
 

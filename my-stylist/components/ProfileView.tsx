@@ -56,6 +56,12 @@ export default function ProfileView({ state, update, restart }: Props) {
         </div>
       </div>
       <DemoNote show={state.demo} />
+      {state.source === "quiz" && (
+        <div className="notice row between" style={{ marginTop: 12 }}>
+          <span>From your quiz answers. Photos give a more precise color reading.</span>
+          <button className="btn sm" onClick={restart}>Add photos</button>
+        </div>
+      )}
       {p.photo_feedback && <div className="notice" style={{ marginTop: 12 }}>{p.photo_feedback}</div>}
 
       <div id="color" />
@@ -73,9 +79,9 @@ export default function ProfileView({ state, update, restart }: Props) {
 
         <h3 style={{ marginTop: 20 }}>Your palette</h3>
         <div className="stack">
-          <div><div className="kicker" style={{ marginBottom: 8 }}>Neutrals</div><Swatches colors={p.color.palette.neutrals} /></div>
-          <div><div className="kicker" style={{ marginBottom: 8 }}>Core colors</div><Swatches colors={p.color.palette.core} /></div>
-          <div><div className="kicker" style={{ marginBottom: 8 }}>Accents</div><Swatches colors={p.color.palette.accents} /></div>
+          {p.color.palette.neutrals.length > 0 && <div><div className="kicker" style={{ marginBottom: 8 }}>Neutrals</div><Swatches colors={p.color.palette.neutrals} /></div>}
+          {p.color.palette.core.length > 0 && <div><div className="kicker" style={{ marginBottom: 8 }}>Core colors</div><Swatches colors={p.color.palette.core} /></div>}
+          {p.color.palette.accents.length > 0 && <div><div className="kicker" style={{ marginBottom: 8 }}>Accents</div><Swatches colors={p.color.palette.accents} /></div>}
           <div><div className="kicker" style={{ marginBottom: 8 }}>Colors that work against you</div><Swatches colors={p.color.palette.avoid} avoid /></div>
         </div>
         <details className="more"><summary>Metals, makeup and tan season</summary>
@@ -144,7 +150,7 @@ export default function ProfileView({ state, update, restart }: Props) {
           <div><h3>Wear</h3><ul>{p.body.lines_that_work.map((x) => <li key={x}>{x}</li>)}</ul></div>
           <div><h3>Skip</h3><ul>{p.body.lines_to_avoid.map((x) => <li key={x}>{x}</li>)}</ul></div>
         </div>
-        <p className="small"><strong>Fabrics:</strong> {p.body.fabrics.join(", ")}</p>
+        {p.body.fabrics.length > 0 && <p className="small"><strong>Fabrics:</strong> {p.body.fabrics.join(", ")}</p>}
         <details className="more"><summary>Why this type</summary><p className="small" style={{ marginTop: 6 }}>{p.body.reasoning}</p></details>
       </Section>
 
@@ -171,6 +177,13 @@ export default function ProfileView({ state, update, restart }: Props) {
         </details>
       </Section>
 
+      {state.source === "quiz" ? (
+        <section className="card">
+          <strong>Doesn't feel right?</strong>
+          <p className="muted small" style={{ marginTop: 6 }}>Retake the quiz, or analyze your photos for a measured result.</p>
+          <button className="btn ghost" onClick={restart}>Start over</button>
+        </section>
+      ) : (
       <details className="card">
         <summary><strong>Doesn't feel right?</strong></summary>
         <p className="muted small" style={{ marginTop: 10 }}>Tell me what feels off and I'll look at the evidence again. I'll only change the answer if the evidence supports it.</p>
@@ -183,6 +196,7 @@ export default function ProfileView({ state, update, restart }: Props) {
         </div>
         <div style={{ marginTop: 10 }}><ErrorBox error={error} /></div>
       </details>
+      )}
     </div>
   );
 }

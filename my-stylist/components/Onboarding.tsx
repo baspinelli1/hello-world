@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { filesToDataUrls } from "@/lib/image";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
 import InstallPrompt from "./InstallPrompt";
+import GuidedColor, { type GuidedResult } from "./GuidedColor";
 import Quiz from "./Quiz";
-import { QUESTIONS } from "@/lib/quiz";
+import { buildQuizProfile, QUESTIONS } from "@/lib/quiz";
 
 const QUIZ_COUNT = QUESTIONS.length;
 import { ErrorBox } from "./ui";
@@ -13,7 +14,12 @@ import { ErrorBox } from "./ui";
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void };
 
 export default function Onboarding({ state, update }: Props) {
-  const [step, setStep] = useState<"welcome" | "quiz" | "height" | "photos" | "calibrate" | "analyzing">("welcome");
+  const [step, setStep] = useState<"welcome" | "quiz" | "guided" | "guidedQuiz" | "height" | "photos" | "calibrate" | "analyzing">("welcome");
+  const [ai, setAi] = useState<boolean | null>(null);
+  const [guided, setGuided] = useState<GuidedResult | null>(null);
+  useEffect(() => {
+    fetch("/api/status").then((r) => r.json()).then((j) => setAi(!!j.ai)).catch(() => setAi(false));
+  }, []);
   const [unit, setUnit] = useState<"ftin" | "cm">("ftin");
   const [ft, setFt] = useState(""), [inch, setInch] = useState(""), [cm, setCm] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
@@ -80,9 +86,9 @@ export default function Onboarding({ state, update }: Props) {
         <div className="hero-dots" aria-hidden><span /><span /><span /></div>
         <h1>Find the style made for you.</h1>
         <p className="lede">Your colors, your body lines and your style essence. Pick how you'd like to start.</p>
-        <button className="choice primary" onClick={() => setStep("height")}>
+        <button className="choice primary" onClick={() => setStep(ai ? "height" : "guided")}>
           <strong>Analyze my photos</strong>
-          <span className="small">Most accurate. Your height, a few photos and one selfie with white paper. About 2 minutes.</span>
+          <span className="small">{ai === false ? "Most accurate. A guided selfie with white paper, then compare colors on your own face. About 3 minutes." : "Most accurate. Your height, a few photos and one selfie with white paper. About 2 minutes."}</span>
         </button>
         <button className="choice" onClick={() => setStep("quiz")}>
           <strong>Take the quiz</strong>
@@ -99,6 +105,26 @@ export default function Onboarding({ state, update }: Props) {
       <Quiz
         onExit={() => setStep("welcome")}
         onDone={(profile, quizAnswers, h) => update({ profile, quizAnswers, height: h, source: "quiz", demo: false, engine: null })}
+      />
+    );
+  }
+
+  if (step === "guided") {
+    return <GuidedColor onExit={() => setStep("welcome")} onDone={(r) => { setGuided(r); setStep("guidedQuiz"); }} />;
+  }
+
+  if (step === "guidedQuiz" && guided) {
+    return (
+      <Quiz
+        questions={QUESTIONS.filter((q) => q.part !== "Color")}
+        build={(answers) => buildQuizProfile(answers, guided.measured)}
+        onExit={() => setStep("guided")}
+        onDone={(profile, quizAnswers, h) =>
+          update({
+            profile, quizAnswers, height: h, source: "guided", demo: false, photos: [guided.photo],
+            engine: { measurements: { ...guided.measurements, otherPhotos: [] }, calibration: guided.calibration, primaryIndex: 0, drapeTiles: guided.tiles },
+          })
+        }
       />
     );
   }

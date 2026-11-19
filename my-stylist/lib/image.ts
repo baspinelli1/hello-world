@@ -215,14 +215,19 @@ export async function runColorEngine(photos: string[], located: PhotoLocate): Pr
 }
 
 /** Draw the calibrated face with each test color draped below the chin. */
-function renderDrapes(img: HTMLImageElement, face: Box, calibration: Calibration | null) {
+export function renderDrapes(
+  img: HTMLImageElement,
+  face: Box,
+  calibration: Calibration | null,
+  drapes: { id: string; hex: string }[] = DRAPES,
+  T = 256
+) {
   const W = img.naturalWidth, H = img.naturalHeight;
   const fw = face.w * W, fh = face.h * H;
   const size = Math.min(Math.max(fh * 1.7, fw * 2), Math.min(W, H) * 1.2);
   const cx = (face.x + face.w / 2) * W;
   const top = face.y * H - fh * 0.2;
   const chinY = (face.y + face.h) * H;
-  const T = 256;
 
   // Calibrated crop, drawn once.
   const crop = document.createElement("canvas");
@@ -247,7 +252,7 @@ function renderDrapes(img: HTMLImageElement, face: Box, calibration: Calibration
   const g = grid.getContext("2d")!;
   const tiles: Record<string, string> = {};
 
-  DRAPES.forEach((drape, i) => {
+  drapes.forEach((drape, i) => {
     const tile = document.createElement("canvas");
     tile.width = T; tile.height = T;
     const t = tile.getContext("2d")!;
@@ -270,5 +275,7 @@ function renderDrapes(img: HTMLImageElement, face: Box, calibration: Calibration
     g.fillText(drape.id, (i % 4) * T + 13, Math.floor(i / 4) * T + 27);
   });
 
-  return { grid: grid.toDataURL("image/jpeg", 0.88), tiles };
+  const out = { grid: grid.toDataURL("image/jpeg", 0.88), tiles };
+  crop.width = crop.height = grid.width = grid.height = 0; // free Safari canvas memory
+  return out;
 }

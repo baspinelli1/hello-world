@@ -20,7 +20,7 @@ export type AppState = {
   height: string;
   photos: string[];
   profile: Profile | null;
-  source: "photos" | "quiz" | null;
+  source: "photos" | "guided" | "quiz" | null;
   quizAnswers: Record<string, number> | null;
   engine: Omit<EngineResult, "drapeGrid"> | null;
   demo: boolean;

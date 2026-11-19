@@ -196,3 +196,18 @@ a.tile:active, a.card:active { transform: scale(0.98); }
 .install img { width: 44px; height: 44px; border-radius: 11px; flex: none; }
 .install .grow { flex: 1; min-width: 0; font-size: 14px; line-height: 1.35; }
 .install .x { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px; }
+
+/* Guided color */
+.viewfinder { position: relative; aspect-ratio: 3 / 4; border-radius: var(--radius); overflow: hidden; background: #000; margin-top: 10px; border: 2px solid var(--ink); }
+.viewfinder video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.viewfinder svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vf-status { position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.65); color: #fff; font-weight: 600; font-size: 14px; text-align: center; }
+.vf-status.ok { background: rgba(46,125,91,.9); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.drapebtn { margin: 0; padding: 0; border: 2px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; text-align: center; font-weight: 600; font-size: 14px; }
+.drapebtn:not(.static):hover, .drapebtn:not(.static):active { border-color: var(--ink); }
+.drapebtn img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.drapebtn span { padding: 8px 4px; }
+.tapper { position: relative; border-radius: 14px; overflow: hidden; cursor: crosshair; touch-action: manipulation; }
+.tapper img { width: 100%; }
+.tapdot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; border: 2px solid #fff; }

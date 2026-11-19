@@ -64,7 +64,9 @@ export function rgbToHex([r, g, b]: RGB): string {
 export function robustMedian(pixels: RGB[]): RGB | null {
   const usable = pixels.filter(([r, g, b]) => {
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    return max < 250 && min > 6; // drop blown highlights and crushed shadows
+    // Drop blown highlights (every channel near white) and crushed shadows.
+    // Very fair skin can legitimately max out one channel, so that is kept.
+    return min < 248 && max > 8;
   });
   if (usable.length < 8) return null;
   const med = (i: 0 | 1 | 2) => {

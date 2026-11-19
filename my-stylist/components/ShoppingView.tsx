@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { AppState } from "@/lib/store";
+import { uid, type AppState } from "@/lib/store";
 
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void };
 
@@ -16,6 +16,27 @@ export default function ShoppingView({ state, update }: Props) {
   const set = (id: string, patch: Partial<(typeof list)[number]>) =>
     update({ shopping: list.map((i) => (i.id === id ? { ...i, ...patch } : i)) });
 
+  const [name, setName] = useState("");
+  const [hex, setHex] = useState<string | null>(null);
+  const [basic, setBasic] = useState(true);
+  const [terms, setTerms] = useState("");
+  const [more, setMore] = useState(false);
+  const p = state.profile?.color.palette;
+  const swatches = p ? [...p.neutrals, ...p.core, ...p.accents].filter((c, i, a) => a.findIndex((x) => x.hex === c.hex) === i) : [];
+
+  function addItem(e: React.FormEvent) {
+    e.preventDefault();
+    const n = name.trim();
+    if (!n) return;
+    update({
+      shopping: [
+        { id: uid(), name: n, color_hex: hex ?? "#E5DDD2", is_basic: basic, thrift_search_terms: terms.trim() || n.toLowerCase(), from: "added by you", bought: false },
+        ...list,
+      ],
+    });
+    setName(""); setTerms(""); setHex(null); setMore(false);
+  }
+
   async function copy() {
     const text = list.filter((i) => !i.bought).map((i) => `• ${i.name} (search: ${i.thrift_search_terms})`).join("\n");
     try { await navigator.clipboard.writeText(`My Stylist shopping list\n${text}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
@@ -28,8 +49,34 @@ export default function ShoppingView({ state, update }: Props) {
         <h1>Take this thrifting</h1>
         <p className="lede">Pieces that complete your looks, in your colors. Each has search terms that work on resale apps and help you scan the racks.</p>
       </div>
+      <form className="card stack" onSubmit={addItem} style={{ marginTop: 12 }}>
+        <div className="row" style={{ flexWrap: "nowrap" }}>
+          <input className="input" placeholder="Add an item, e.g. camel trench coat" value={name} onChange={(e) => setName(e.target.value)} aria-label="Item name" />
+          <button className="btn accent" type="submit" disabled={!name.trim()}>Add</button>
+        </div>
+        <button type="button" className="linkish small" style={{ alignSelf: "flex-start" }} onClick={() => setMore(!more)}>{more ? "Fewer options" : "Color, type and search terms (optional)"}</button>
+        {more && (
+          <div className="stack">
+            {swatches.length > 0 && (
+              <div>
+                <div className="kicker" style={{ marginBottom: 8 }}>Color from your palette</div>
+                <div className="pick">
+                  {swatches.map((c) => (
+                    <button key={c.hex} type="button" title={c.name} aria-label={c.name} aria-pressed={hex === c.hex} className={hex === c.hex ? "on" : ""} style={{ background: c.hex }} onClick={() => setHex(hex === c.hex ? null : c.hex)} />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="row">
+              <button type="button" className={`btn sm ${basic ? "" : "ghost"}`} onClick={() => setBasic(true)}>Wardrobe basic</button>
+              <button type="button" className={`btn sm ${basic ? "ghost" : ""}`} onClick={() => setBasic(false)}>Statement piece</button>
+            </div>
+            <input className="input" placeholder="Search terms or a note, e.g. wool, under $40" value={terms} onChange={(e) => setTerms(e.target.value)} aria-label="Search terms or note" />
+          </div>
+        )}
+      </form>
       {list.length === 0 ? (
-        <div className="card flat"><p className="muted" style={{ margin: 0 }}>Nothing here yet. Add missing pieces from your outfit ideas or outfit checks.</p></div>
+        <div className="card flat"><p className="muted" style={{ margin: 0 }}>Nothing here yet. Add your own items above, or add missing pieces from your outfit ideas and outfit checks.</p></div>
       ) : (
         <>
           <div className="row" style={{ marginTop: 8 }}>
@@ -45,7 +92,7 @@ export default function ShoppingView({ state, update }: Props) {
                   <span className="chip" style={{ background: i.color_hex }} />
                   <span className="grow" style={{ textDecoration: i.bought ? "line-through" : "none" }}>
                     {i.name}
-                    <div className="muted small">Search: “{i.thrift_search_terms}” · for {i.from}</div>
+                    <div className="muted small">Search: “{i.thrift_search_terms}” · {i.from === "added by you" ? "added by you" : `for ${i.from}`}</div>
                   </span>
                   <button className="linkish small" onClick={() => update({ shopping: list.filter((x) => x.id !== i.id) })} aria-label={`Remove ${i.name}`}>remove</button>
                 </div>

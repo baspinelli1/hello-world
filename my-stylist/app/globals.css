@@ -211,3 +211,6 @@ a.tile:active, a.card:active { transform: scale(0.98); }
 .tapper { position: relative; border-radius: 14px; overflow: hidden; cursor: crosshair; touch-action: manipulation; }
 .tapper img { width: 100%; }
 .tapdot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; border: 2px solid #fff; }
+.pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.pick button { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--line); cursor: pointer; padding: 0; }
+.pick button.on { outline: 3px solid var(--ink); outline-offset: 2px; }

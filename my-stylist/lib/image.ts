@@ -224,9 +224,10 @@ export function renderDrapes(
 ) {
   const W = img.naturalWidth, H = img.naturalHeight;
   const fw = face.w * W, fh = face.h * H;
-  const size = Math.min(Math.max(fh * 1.7, fw * 2), Math.min(W, H) * 1.2);
+  // Frame tightly enough that the face is large, with room below the chin for the drape.
+  const size = Math.min(Math.max(fh * 1.5, fw * 1.8), Math.min(W, H) * 1.2);
   const cx = (face.x + face.w / 2) * W;
-  const top = face.y * H - fh * 0.2;
+  const top = face.y * H - fh * 0.14;
   const chinY = (face.y + face.h) * H;
 
   // Calibrated crop, drawn once.

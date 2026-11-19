@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { fileToDataUrl } from "@/lib/image";
+import { filesToDataUrls } from "@/lib/image";
 import type { Inspo } from "@/lib/schemas";
 import { api, type AppState } from "@/lib/store";
 import { getTrends } from "./trends";
@@ -36,9 +36,15 @@ export default function InspoView({ state, update }: Props) {
     setBusy(null);
   }
 
-  async function addScreenshots(files: FileList | null) {
-    if (!files) return;
-    const urls = await Promise.all(Array.from(files).slice(0, 12).map((f) => fileToDataUrl(f, 900, 0.82)));
+  async function addScreenshots(input: HTMLInputElement) {
+    const files = Array.from(input.files ?? []).slice(0, 12);
+    input.value = "";
+    if (!files.length) return;
+    setBusy(`Adding 1 of ${files.length}…`);
+    setError(null);
+    const { urls, failed } = await filesToDataUrls(files, { maxSide: 900, quality: 0.82, onProgress: (d, t) => d < t && setBusy(`Adding ${d + 1} of ${t}…`) });
+    setBusy(null);
+    if (failed) setError(`${failed} image${failed > 1 ? "s" : ""} couldn't be read.`);
     const next = [...images, ...urls].slice(0, 20);
     setImages(next);
     update({ inspo: { board, images: next, result: null } });
@@ -75,7 +81,7 @@ export default function InspoView({ state, update }: Props) {
           <button className="btn" disabled={!board || !!busy} onClick={loadBoard}>Load</button>
         </div>
         <label className="drop" style={{ padding: 14 }}>
-          <input type="file" accept="image/*" multiple onChange={(e) => addScreenshots(e.target.files)} />
+          <input type="file" accept="image/*" multiple onChange={(e) => addScreenshots(e.currentTarget)} />
           <strong>Or add screenshots</strong>
         </label>
         <ErrorBox error={error} />

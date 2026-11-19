@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { fileToDataUrl } from "@/lib/image";
+import { filesToDataUrls } from "@/lib/image";
 import type { Critique } from "@/lib/schemas";
 import { api, uid, type AppState, type JournalEntry } from "@/lib/store";
 import { getTrends } from "./trends";
@@ -102,7 +102,15 @@ export default function CheckView({ state, update }: Props) {
       <DemoNote show={state.demo} />
       <div className="card stack">
         <label className="drop">
-          <input type="file" accept="image/*" onChange={async (e) => e.target.files?.[0] && setImage(await fileToDataUrl(e.target.files[0]))} />
+          <input type="file" accept="image/*" onChange={async (e) => {
+            const input = e.currentTarget;
+            const files = Array.from(input.files ?? []).slice(0, 1);
+            input.value = "";
+            if (!files.length) return;
+            setError(null);
+            const { urls } = await filesToDataUrls(files);
+            if (urls[0]) setImage(urls[0]); else setError("That photo couldn't be read. Try another, or a screenshot of it.");
+          }} />
           {image ? <img src={image} alt="Outfit" style={{ maxHeight: 280, margin: "0 auto", borderRadius: 12 }} /> : <><strong>Add an outfit photo</strong><div className="muted small">On you, on a hanger, or a screenshot</div></>}
         </label>
         <input className="input" placeholder="Optional: anything to add? e.g. for a winter wedding" value={context} onChange={(e) => setContext(e.target.value)} />

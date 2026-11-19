@@ -10,15 +10,82 @@ import type { PhotoLocate } from "./schemas";
 type Box = { x: number; y: number; w: number; h: number };
 type LocatedPhoto = PhotoLocate["photos"][number];
 
+type Decoded = { source: CanvasImageSource; width: number; height: number; release: () => void };
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error("timeout")), ms);
+    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+}
+
+/** Decode a photo, trying the fast path first and falling back for older iPhone Safari. */
+async function decode(file: File): Promise<Decoded> {
+  if (typeof createImageBitmap === "function") {
+    for (const opts of [{ imageOrientation: "from-image" } as ImageBitmapOptions, undefined]) {
+      try {
+        const bmp = await withTimeout(opts ? createImageBitmap(file, opts) : createImageBitmap(file), 15000);
+        return { source: bmp, width: bmp.width, height: bmp.height, release: () => bmp.close() };
+      } catch {
+        // try the next method
+      }
+    }
+  }
+  // Fallback: a plain <img>, which applies the photo's rotation automatically.
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await withTimeout(loadImage(url), 20000);
+    return { source: img, width: img.naturalWidth, height: img.naturalHeight, release: () => URL.revokeObjectURL(url) };
+  } catch (e) {
+    URL.revokeObjectURL(url);
+    throw e;
+  }
+}
+
+/**
+ * Shrink a photo to a manageable JPEG. Big phone photos are decoded one at a
+ * time and their canvas memory is released right away, because iPhone Safari
+ * has a strict limit on total image memory.
+ */
 export async function fileToDataUrl(file: File, maxSide = 1280, quality = 0.88): Promise<string> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const d = await decode(file);
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas.toDataURL("image/jpeg", quality);
+  try {
+    const scale = Math.min(1, maxSide / Math.max(d.width, d.height));
+    canvas.width = Math.max(1, Math.round(d.width * scale));
+    canvas.height = Math.max(1, Math.round(d.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("no canvas");
+    ctx.drawImage(d.source, 0, 0, canvas.width, canvas.height);
+    const url = canvas.toDataURL("image/jpeg", quality);
+    if (!url.startsWith("data:image/jpeg")) throw new Error("encode failed");
+    return url;
+  } finally {
+    d.release();
+    canvas.width = 0; // frees Safari's canvas memory immediately
+    canvas.height = 0;
+  }
+}
+
+/** Convert several files one by one, reporting progress and skipping any that fail. */
+export async function filesToDataUrls(
+  files: File[],
+  opts: { maxSide?: number; quality?: number; onProgress?: (done: number, total: number, url: string | null) => void } = {}
+): Promise<{ urls: string[]; failed: number }> {
+  const urls: string[] = [];
+  let failed = 0;
+  for (let i = 0; i < files.length; i++) {
+    let url: string | null = null;
+    try {
+      url = await fileToDataUrl(files[i], opts.maxSide, opts.quality);
+      urls.push(url);
+    } catch {
+      failed++;
+    }
+    opts.onProgress?.(i + 1, files.length, url);
+    await new Promise((r) => setTimeout(r, 0)); // let the screen update between photos
+  }
+  return { urls, failed };
 }
 
 export function loadImage(src: string): Promise<HTMLImageElement> {
@@ -148,14 +215,20 @@ export async function runColorEngine(photos: string[], located: PhotoLocate): Pr
 }
 
 /** Draw the calibrated face with each test color draped below the chin. */
-function renderDrapes(img: HTMLImageElement, face: Box, calibration: Calibration | null) {
+export function renderDrapes(
+  img: HTMLImageElement,
+  face: Box,
+  calibration: Calibration | null,
+  drapes: { id: string; hex: string }[] = DRAPES,
+  T = 256
+) {
   const W = img.naturalWidth, H = img.naturalHeight;
   const fw = face.w * W, fh = face.h * H;
-  const size = Math.min(Math.max(fh * 1.7, fw * 2), Math.min(W, H) * 1.2);
+  // Frame tightly enough that the face is large, with room below the chin for the drape.
+  const size = Math.min(Math.max(fh * 1.5, fw * 1.8), Math.min(W, H) * 1.2);
   const cx = (face.x + face.w / 2) * W;
-  const top = face.y * H - fh * 0.2;
+  const top = face.y * H - fh * 0.14;
   const chinY = (face.y + face.h) * H;
-  const T = 256;
 
   // Calibrated crop, drawn once.
   const crop = document.createElement("canvas");
@@ -180,7 +253,7 @@ function renderDrapes(img: HTMLImageElement, face: Box, calibration: Calibration
   const g = grid.getContext("2d")!;
   const tiles: Record<string, string> = {};
 
-  DRAPES.forEach((drape, i) => {
+  drapes.forEach((drape, i) => {
     const tile = document.createElement("canvas");
     tile.width = T; tile.height = T;
     const t = tile.getContext("2d")!;
@@ -203,5 +276,7 @@ function renderDrapes(img: HTMLImageElement, face: Box, calibration: Calibration
     g.fillText(drape.id, (i % 4) * T + 13, Math.floor(i / 4) * T + 27);
   });
 
-  return { grid: grid.toDataURL("image/jpeg", 0.88), tiles };
+  const out = { grid: grid.toDataURL("image/jpeg", 0.88), tiles };
+  crop.width = crop.height = grid.width = grid.height = 0; // free Safari canvas memory
+  return out;
 }

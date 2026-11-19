@@ -174,7 +174,7 @@ export const QUESTIONS: Question[] = [
 ];
 
 // Season positions on hue (cool -1 to warm 1), value (light -1 to deep 1), chroma (soft -1 to clear 1).
-const SEASON_POS: Record<string, [number, number, number]> = {
+export const SEASON_POS: Record<string, [number, number, number]> = {
   "light-spring": [0.4, -1, 0.3], "true-spring": [1, -0.3, 0.6], "bright-spring": [0.4, 0, 1],
   "light-summer": [-0.4, -1, -0.2], "true-summer": [-1, -0.2, -0.3], "soft-summer": [-0.4, 0, -1],
   "soft-autumn": [0.4, 0, -1], "true-autumn": [1, 0.2, -0.2], "deep-autumn": [0.4, 1, -0.1],
@@ -221,22 +221,37 @@ function band<T extends string>(x: number, labels: readonly T[]): T {
   return labels[i];
 }
 
-export function scoreQuiz(answers: Answers) {
+/** Color measured from photos (free guided draping), used instead of the quiz's color questions. */
+export type MeasuredColor = {
+  h: number; v: number; c: number;
+  contrast: number; // same scale as the quiz contrast total, roughly -3..3
+  isOlive: boolean;
+  confidence: "high" | "medium" | "low";
+  explained: string;
+  drapes: { best: string[]; worst: string[]; observations: string };
+};
+
+export function rankSeasons(h: number, v: number, c: number) {
+  return Object.entries(SEASON_POS)
+    .map(([slug, [sh, sv, sc]]) => ({ slug, d: Math.hypot(h - sh, v - sv, c - sc) }))
+    .sort((a, b) => a.d - b.d);
+}
+
+export function scoreQuiz(answers: Answers, measured?: MeasuredColor) {
   const picked = (part: Question["part"]) =>
     QUESTIONS.filter((q) => q.part === part && answers[q.id] !== undefined).map((q) => q.options[answers[q.id]]);
 
   // Color
   const fx = { hue: 0, value: 0, chroma: 0, contrast: 0, olive: 0 };
   for (const o of picked("Color")) for (const k of Object.keys(fx) as (keyof typeof fx)[]) fx[k] += o.color?.[k] ?? 0;
-  const isOlive = fx.olive >= 3;
+  const isOlive = measured ? measured.isOlive : fx.olive >= 3;
   let h = fx.hue / 6, v = fx.value / 4.5, c = fx.chroma / 5 + fx.contrast * 0.08;
-  if (isOlive) { h *= 0.6; c -= 0.15; }
-  const ranked = Object.entries(SEASON_POS)
-    .map(([slug, [sh, sv, sc]]) => ({ slug, d: Math.hypot(h - sh, v - sv, c - sc) }))
-    .sort((a, b) => a.d - b.d);
+  if (isOlive && !measured) { h *= 0.6; c -= 0.15; }
+  if (measured) { h = measured.h; v = measured.v; c = measured.c; fx.contrast = measured.contrast; }
+  const ranked = rankSeasons(h, v, c);
   const season = SEASONS.find((s) => s.slug === ranked[0].slug)!;
   const runnerUp = SEASONS.find((s) => s.slug === ranked[1].slug)!;
-  const colorConf: "medium" | "low" = ranked[1].d - ranked[0].d > 0.2 ? "medium" : "low";
+  const colorConf: "high" | "medium" | "low" = measured ? measured.confidence : ranked[1].d - ranked[0].d > 0.2 ? "medium" : "low";
 
   // Body
   const L: Record<Letter, number> = { A: 0, B: 0, C: 0, D: 0, E: 0 };
@@ -283,8 +298,8 @@ export function scoreQuiz(answers: Answers) {
   };
 }
 
-export function buildQuizProfile(answers: Answers): Profile {
-  const r = scoreQuiz(answers);
+export function buildQuizProfile(answers: Answers, measured?: MeasuredColor): Profile {
+  const r = scoreQuiz(answers, measured);
   const s = r.color.season;
   const fam = FAMILY_NOTES[s.family];
   const hueLabel = band(r.color.h, ["cool", "neutral-cool", "neutral", "neutral-warm", "warm"] as const);
@@ -305,9 +320,13 @@ export function buildQuizProfile(answers: Answers): Profile {
         contrast: band(r.color.contrast / 3, ["low", "medium-low", "medium", "medium-high", "high"] as const),
       },
       is_olive: r.color.isOlive,
-      undertone_explained: `${s.about}${r.color.isOlive ? " Your answers also point to an olive complexion: a green-gold cast that often sits on a neutral or cool base. That's why muted, slightly earthy versions of colors tend to suit you better than bright golden ones." : ""}`,
-      why_other_apps_may_differ: "A quiz can only go on what you tell it, and lighting, makeup and memory all blur how we see our own coloring. Adding photos lets My Stylist measure your skin directly.",
-      drape_results: { best: [], worst: [], observations: "" },
+      undertone_explained: measured
+        ? measured.explained
+        : `${s.about}${r.color.isOlive ? " Your answers also point to an olive complexion: a green-gold cast that often sits on a neutral or cool base. That's why muted, slightly earthy versions of colors tend to suit you better than bright golden ones." : ""}`,
+      why_other_apps_may_differ: measured
+        ? "Most apps read raw photo colors, which your camera tints. My Stylist corrected your photo against white paper first, measured your skin in a scientific color space, and checked the result against your own side-by-side draping."
+        : "A quiz can only go on what you tell it, and lighting, makeup and memory all blur how we see our own coloring. Adding photos lets My Stylist measure your skin directly.",
+      drape_results: measured ? measured.drapes : { best: [], worst: [], observations: "" },
       palette: { neutrals: NEUTRALS[s.slug], core: s.palette, accents: [], avoid: s.avoid },
       metals: fam.metals,
       makeup_hints: fam.makeup,

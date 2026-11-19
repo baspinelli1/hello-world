@@ -1,27 +1,32 @@
 "use client";
 import { useState } from "react";
-import { buildQuizProfile, QUESTIONS, type Answers } from "@/lib/quiz";
+import { buildQuizProfile, QUESTIONS, type Answers, type Question } from "@/lib/quiz";
 import type { Profile } from "@/lib/schemas";
 
-type Props = { onDone: (profile: Profile, answers: Answers, height: string) => void; onExit: () => void };
+type Props = {
+  onDone: (profile: Profile, answers: Answers, height: string) => void;
+  onExit: () => void;
+  questions?: Question[];
+  build?: (answers: Answers) => Profile;
+};
 
 const PART_CLASS = { Color: "c1", Body: "c2", Essence: "c3" } as const;
 
-export default function Quiz({ onDone, onExit }: Props) {
+export default function Quiz({ onDone, onExit, questions = QUESTIONS, build = buildQuizProfile }: Props) {
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
-  const q = QUESTIONS[i];
-  const pct = Math.round((i / QUESTIONS.length) * 100);
-  const firstOfPart = i === 0 || QUESTIONS[i - 1].part !== q.part;
+  const q = questions[i];
+  const pct = Math.round((i / questions.length) * 100);
+  const firstOfPart = i === 0 || questions[i - 1].part !== q.part;
 
   function choose(idx: number) {
     const next = { ...answers, [q.id]: idx };
     setAnswers(next);
-    if (i + 1 < QUESTIONS.length) {
+    if (i + 1 < questions.length) {
       setTimeout(() => setI(i + 1), 160);
     } else {
       const height = QUESTIONS.find((x) => x.id === "height")!.options[next.height ?? 1].label;
-      onDone(buildQuizProfile(next), next, height);
+      onDone(build(next), next, height);
     }
   }
 
@@ -29,7 +34,7 @@ export default function Quiz({ onDone, onExit }: Props) {
     <div style={{ paddingTop: 14 }}>
       <div className="row between">
         <button className="linkish small" onClick={() => (i === 0 ? onExit() : setI(i - 1))}>← Back</button>
-        <span className="muted small">{i + 1} of {QUESTIONS.length}</span>
+        <span className="muted small">{i + 1} of {questions.length}</span>
       </div>
       <div className="progress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${pct}%` }} /></div>
       <span className={`badge part ${PART_CLASS[q.part]}`}>{q.part}{firstOfPart && q.part !== "Color" ? " · new section" : ""}</span>

@@ -97,6 +97,12 @@ export default function ProfileView({ state, update, restart }: Props) {
 
       {Object.keys(tiles).length > 0 && (
         <Section kicker="Virtual draping" title="Your color test">
+          {tiles.best && tiles.worst && (
+            <div className="pair" style={{ marginBottom: 14 }}>
+              <figure className="drapebtn static"><img src={tiles.best} alt="" /><span>✓ {p.color.palette.core[0]?.name}</span></figure>
+              <figure className="drapebtn static"><img src={tiles.worst} alt="" /><span>✕ {p.color.palette.avoid[0]?.name}</span></figure>
+            </div>
+          )}
           <p>{p.color.drape_results.observations}</p>
           <div className="kicker" style={{ margin: "14px 0 8px" }}>Lit you up</div>
           <div className="drapes">
@@ -111,9 +117,9 @@ export default function ProfileView({ state, update, restart }: Props) {
             ))}
           </div>
           <details style={{ marginTop: 16 }}>
-            <summary>See all 16 drapes</summary>
+            <summary>See all the drapes</summary>
             <div className="drapes" style={{ marginTop: 10 }}>
-              {DRAPES.map((d) => tiles[d.id] && (
+              {DRAPES.filter((d) => tiles[d.id]).map((d) => (
                 <figure key={d.id}><img src={tiles[d.id]} alt={d.name} /><figcaption>{d.name}</figcaption></figure>
               ))}
             </div>
@@ -179,10 +185,10 @@ export default function ProfileView({ state, update, restart }: Props) {
         </details>
       </Section>
 
-      {state.source === "quiz" ? (
+      {state.source !== "photos" ? (
         <section className="card">
           <strong>Doesn't feel right?</strong>
-          <p className="muted small" style={{ marginTop: 6 }}>Retake the quiz, or analyze your photos for a measured result.</p>
+          <p className="muted small" style={{ marginTop: 6 }}>{state.source === "guided" ? "Redo the draping in different daylight. If both runs agree, you can trust the result." : "Retake the quiz, or analyze your photos for a measured result."}</p>
           <button className="btn ghost" onClick={restart}>Start over</button>
         </section>
       ) : (

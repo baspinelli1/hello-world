@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
-import { fileToDataUrl } from "@/lib/image";
+import { useEffect, useState } from "react";
+import { filesToDataUrls } from "@/lib/image";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
 import InstallPrompt from "./InstallPrompt";
+import GuidedColor, { type GuidedResult } from "./GuidedColor";
 import Quiz from "./Quiz";
-import { QUESTIONS } from "@/lib/quiz";
+import { buildQuizProfile, QUESTIONS } from "@/lib/quiz";
 
 const QUIZ_COUNT = QUESTIONS.length;
 import { ErrorBox } from "./ui";
@@ -13,7 +14,12 @@ import { ErrorBox } from "./ui";
 type Props = { state: AppState; update: (patch: Partial<AppState>) => void };
 
 export default function Onboarding({ state, update }: Props) {
-  const [step, setStep] = useState<"welcome" | "quiz" | "height" | "photos" | "calibrate" | "analyzing">("welcome");
+  const [step, setStep] = useState<"welcome" | "quiz" | "guided" | "guidedQuiz" | "height" | "photos" | "calibrate" | "analyzing">("welcome");
+  const [ai, setAi] = useState<boolean | null>(null);
+  const [guided, setGuided] = useState<GuidedResult | null>(null);
+  useEffect(() => {
+    fetch("/api/status").then((r) => r.json()).then((j) => setAi(!!j.ai)).catch(() => setAi(false));
+  }, []);
   const [unit, setUnit] = useState<"ftin" | "cm">("ftin");
   const [ft, setFt] = useState(""), [inch, setInch] = useState(""), [cm, setCm] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
@@ -26,16 +32,37 @@ export default function Onboarding({ state, update }: Props) {
 
   const height = unit === "cm" ? (cm ? `${cm} cm` : "") : ft ? `${ft}'${inch || 0}"` : "";
 
-  async function addGallery(files: FileList | null) {
-    if (!files) return;
+  const [adding, setAdding] = useState<string | null>(null);
+  const [photoNote, setPhotoNote] = useState<string | null>(null);
+
+  async function addGallery(input: HTMLInputElement) {
+    const files = Array.from(input.files ?? []).slice(0, Math.max(0, 10 - gallery.length));
+    input.value = ""; // lets you pick the same photo again later
+    if (!files.length) return;
     setBusy(true);
-    const urls = await Promise.all(Array.from(files).slice(0, 12).map((f) => fileToDataUrl(f)));
-    setGallery((g) => [...g, ...urls].slice(0, 10));
+    setPhotoNote(null);
+    setAdding(`Adding 1 of ${files.length}…`);
+    const { failed } = await filesToDataUrls(files, {
+      onProgress: (done, total, url) => {
+        if (done < total) setAdding(`Adding ${done + 1} of ${total}…`);
+        if (url) setGallery((g) => [...g, url].slice(0, 10));
+      },
+    });
+    setAdding(null);
     setBusy(false);
+    if (failed) setPhotoNote(`${failed} photo${failed > 1 ? "s" : ""} couldn't be read. Try a different one, or a screenshot of it.`);
   }
 
-  async function single(files: FileList | null, set: (v: string) => void) {
-    if (files?.[0]) set(await fileToDataUrl(files[0], 1600, 0.92));
+  async function single(input: HTMLInputElement, set: (v: string) => void) {
+    const files = Array.from(input.files ?? []).slice(0, 1);
+    input.value = "";
+    if (!files.length) return;
+    setAdding("Adding photo…");
+    setPhotoNote(null);
+    const { urls } = await filesToDataUrls(files, { maxSide: 1600, quality: 0.92 });
+    setAdding(null);
+    if (urls[0]) set(urls[0]);
+    else setPhotoNote("That photo couldn't be read. Try taking it again.");
   }
 
   async function analyze() {
@@ -59,9 +86,9 @@ export default function Onboarding({ state, update }: Props) {
         <div className="hero-dots" aria-hidden><span /><span /><span /></div>
         <h1>Find the style made for you.</h1>
         <p className="lede">Your colors, your body lines and your style essence. Pick how you'd like to start.</p>
-        <button className="choice primary" onClick={() => setStep("height")}>
+        <button className="choice primary" onClick={() => setStep(ai ? "height" : "guided")}>
           <strong>Analyze my photos</strong>
-          <span className="small">Most accurate. Your height, a few photos and one selfie with white paper. About 2 minutes.</span>
+          <span className="small">{ai === false ? "Most accurate. A guided selfie with white paper, then compare colors on your own face. About 3 minutes." : "Most accurate. Your height, a few photos and one selfie with white paper. About 2 minutes."}</span>
         </button>
         <button className="choice" onClick={() => setStep("quiz")}>
           <strong>Take the quiz</strong>
@@ -78,6 +105,33 @@ export default function Onboarding({ state, update }: Props) {
       <Quiz
         onExit={() => setStep("welcome")}
         onDone={(profile, quizAnswers, h) => update({ profile, quizAnswers, height: h, source: "quiz", demo: false, engine: null })}
+      />
+    );
+  }
+
+  if (step === "guided") {
+    return (
+      <GuidedColor
+        saved={state.colorPhoto}
+        onSave={(colorPhoto) => update({ colorPhoto })}
+        onExit={() => setStep("welcome")}
+        onDone={(r) => { setGuided(r); setStep("guidedQuiz"); }}
+      />
+    );
+  }
+
+  if (step === "guidedQuiz" && guided) {
+    return (
+      <Quiz
+        questions={QUESTIONS.filter((q) => q.part !== "Color")}
+        build={(answers) => buildQuizProfile(answers, guided.measured)}
+        onExit={() => setStep("guided")}
+        onDone={(profile, quizAnswers, h) =>
+          update({
+            profile, quizAnswers, height: h, source: "guided", demo: false, photos: [guided.photo],
+            engine: { measurements: { ...guided.measurements, otherPhotos: [] }, calibration: guided.calibration, primaryIndex: 0, drapeTiles: guided.tiles },
+          })
+        }
       />
     );
   }
@@ -114,10 +168,11 @@ export default function Onboarding({ state, update }: Props) {
           Any mix of selfies and full-length shots. Include at least one full-length photo. I'll sort out which are useful and skip filtered or dim ones.
         </p>
         <label className="drop">
-          <input type="file" accept="image/*" multiple onChange={(e) => addGallery(e.target.files)} />
-          <strong>{busy ? "Adding…" : "Choose from camera roll"}</strong>
+          <input type="file" accept="image/*" multiple onChange={(e) => addGallery(e.currentTarget)} disabled={busy} />
+          <strong>{adding ?? "Choose from camera roll"}</strong>
           <div className="muted small">{gallery.length}/10 added</div>
         </label>
+        {photoNote && <div className="error" role="alert">{photoNote}</div>}
         {gallery.length > 0 && (
           <div className="thumbs">
             {gallery.map((src, i) => (
@@ -147,16 +202,17 @@ export default function Onboarding({ state, update }: Props) {
           <div>✨ Bare face if you can, hair pulled back</div>
         </div>
         <label className="drop">
-          <input type="file" accept="image/*" capture="user" onChange={(e) => single(e.target.files, setSelfie)} />
-          {selfie ? <img src={selfie} alt="Calibration selfie" style={{ maxHeight: 220, margin: "0 auto", borderRadius: 12 }} /> : <strong>Take calibration selfie</strong>}
+          <input type="file" accept="image/*" onChange={(e) => single(e.currentTarget, setSelfie)} />
+          {selfie ? <img src={selfie} alt="Calibration selfie" style={{ maxHeight: 220, margin: "0 auto", borderRadius: 12 }} /> : <strong>{adding ?? "Take or choose calibration selfie"}</strong>}
         </label>
+        {photoNote && <div className="error" role="alert">{photoNote}</div>}
         <details>
           <summary>Optional: inner-wrist photo (separates tan from undertone)</summary>
           <p className="muted small" style={{ marginTop: 8 }}>
             Your inner wrist rarely sees sun, so it shows your baseline color. Photograph it with the same white paper beside it, in the same light.
           </p>
           <label className="drop">
-            <input type="file" accept="image/*" capture="environment" onChange={(e) => single(e.target.files, setWrist)} />
+            <input type="file" accept="image/*" onChange={(e) => single(e.currentTarget, setWrist)} />
             {wrist ? <img src={wrist} alt="Wrist" style={{ maxHeight: 160, margin: "0 auto", borderRadius: 12 }} /> : <strong>Add wrist photo</strong>}
           </label>
         </details>

@@ -2,10 +2,10 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  title: "My Stylist",
+  title: "Maven: Personal Style Studio",
   description: "A technical AI stylist: your color season, body type and style essence, with outfits made for you.",
-  applicationName: "My Stylist",
-  appleWebApp: { capable: true, title: "My Stylist", statusBarStyle: "default" },
+  applicationName: "Maven",
+  appleWebApp: { capable: true, title: "Maven", statusBarStyle: "default" },
   icons: { apple: "/apple-touch-icon.png" },
 };
 

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "My Stylist",
-    short_name: "My Stylist",
+    name: "Maven: Personal Style Studio",
+    short_name: "Maven",
     description: "Your color season, body type and style essence, with outfits made for you.",
     start_url: "/",
     display: "standalone",

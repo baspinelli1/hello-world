@@ -1,4 +1,4 @@
-// Color science for My Stylist. Pure functions, no browser APIs, so they can be
+// Color science for Maven. Pure functions, no browser APIs, so they can be
 // unit-tested in Node and run in the browser on canvas pixel data.
 
 export type RGB = [number, number, number]; // 0-255 sRGB

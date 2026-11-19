@@ -39,7 +39,7 @@ export default function ShoppingView({ state, update }: Props) {
 
   async function copy() {
     const text = list.filter((i) => !i.bought).map((i) => `• ${i.name} (search: ${i.thrift_search_terms})`).join("\n");
-    try { await navigator.clipboard.writeText(`My Stylist shopping list\n${text}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
+    try { await navigator.clipboard.writeText(`Maven shopping list\n${text}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
   }
 
   return (

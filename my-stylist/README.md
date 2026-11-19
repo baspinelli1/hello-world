@@ -1,4 +1,4 @@
-# My Stylist
+# Maven: Personal Style Studio
 
 A technical AI stylist. From a few photos and your height, it works out your **color season**, **Kibbe body type** and **Kitchener style essence**, then suggests outfits, checks outfits you send it, reads your Pinterest saves and builds a thrifting list.
 

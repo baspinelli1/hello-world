@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ESSENCES, KIBBE, SEASONS, SYSTEMS } from "@/lib/learn";
 
-export const metadata = { title: "Learn · My Stylist" };
+export const metadata = { title: "Learn · Maven" };
 
 export default function LearnHub() {
   return (
@@ -22,7 +22,7 @@ export default function LearnHub() {
         <Link className="tile c3" href="/learn/essences"><span className="kicker">{ESSENCES.length} essences</span><strong>{SYSTEMS.essences.title}</strong></Link>
       </div>
       <Link href="/learn/how-it-works" className="card row between" style={{ textDecoration: "none", color: "inherit" }}>
-        <div><div className="kicker">The science</div><h3 style={{ margin: 0 }}>How My Stylist analyzes you</h3></div>
+        <div><div className="kicker">The science</div><h3 style={{ margin: 0 }}>How Maven analyzes you</h3></div>
         <span aria-hidden style={{ fontSize: 22 }}>→</span>
       </Link>
       <Link href="/learn/trends" className="card row between" style={{ textDecoration: "none", color: "inherit" }}>

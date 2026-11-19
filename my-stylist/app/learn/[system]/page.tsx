@@ -10,7 +10,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ system: string }> }) {
   const { system } = await params;
-  return { title: `${SYSTEMS[system as SystemId]?.title ?? "Learn"} · My Stylist` };
+  return { title: `${SYSTEMS[system as SystemId]?.title ?? "Learn"} · Maven` };
 }
 
 export default async function SystemPage({ params }: { params: Promise<{ system: string }> }) {

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const feed = feedUrl(url ?? "");
   if (!feed) return Response.json({ error: "Paste a public Pinterest board link, like pinterest.com/yourname/boardname." }, { status: 400 });
   try {
-    const res = await fetch(feed, { headers: { "User-Agent": "MyStylist/1.0" } });
+    const res = await fetch(feed, { headers: { "User-Agent": "Maven/1.0" } });
     if (!res.ok) return Response.json({ error: "Couldn't read that board. Make sure it's public." }, { status: 404 });
     const xml = await res.text();
     const images = Array.from(xml.matchAll(/<img[^>]+src="([^"]+)"/g))

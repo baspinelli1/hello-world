@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { fileToDataUrl } from "@/lib/image";
+import { filesToDataUrls } from "@/lib/image";
 import type { AppState } from "@/lib/store";
 import { ANALYSIS_STEPS, runAnalysis } from "./analysis";
 import InstallPrompt from "./InstallPrompt";
@@ -26,16 +26,37 @@ export default function Onboarding({ state, update }: Props) {
 
   const height = unit === "cm" ? (cm ? `${cm} cm` : "") : ft ? `${ft}'${inch || 0}"` : "";
 
-  async function addGallery(files: FileList | null) {
-    if (!files) return;
+  const [adding, setAdding] = useState<string | null>(null);
+  const [photoNote, setPhotoNote] = useState<string | null>(null);
+
+  async function addGallery(input: HTMLInputElement) {
+    const files = Array.from(input.files ?? []).slice(0, Math.max(0, 10 - gallery.length));
+    input.value = ""; // lets you pick the same photo again later
+    if (!files.length) return;
     setBusy(true);
-    const urls = await Promise.all(Array.from(files).slice(0, 12).map((f) => fileToDataUrl(f)));
-    setGallery((g) => [...g, ...urls].slice(0, 10));
+    setPhotoNote(null);
+    setAdding(`Adding 1 of ${files.length}…`);
+    const { failed } = await filesToDataUrls(files, {
+      onProgress: (done, total, url) => {
+        if (done < total) setAdding(`Adding ${done + 1} of ${total}…`);
+        if (url) setGallery((g) => [...g, url].slice(0, 10));
+      },
+    });
+    setAdding(null);
     setBusy(false);
+    if (failed) setPhotoNote(`${failed} photo${failed > 1 ? "s" : ""} couldn't be read. Try a different one, or a screenshot of it.`);
   }
 
-  async function single(files: FileList | null, set: (v: string) => void) {
-    if (files?.[0]) set(await fileToDataUrl(files[0], 1600, 0.92));
+  async function single(input: HTMLInputElement, set: (v: string) => void) {
+    const files = Array.from(input.files ?? []).slice(0, 1);
+    input.value = "";
+    if (!files.length) return;
+    setAdding("Adding photo…");
+    setPhotoNote(null);
+    const { urls } = await filesToDataUrls(files, { maxSide: 1600, quality: 0.92 });
+    setAdding(null);
+    if (urls[0]) set(urls[0]);
+    else setPhotoNote("That photo couldn't be read. Try taking it again.");
   }
 
   async function analyze() {
@@ -114,10 +135,11 @@ export default function Onboarding({ state, update }: Props) {
           Any mix of selfies and full-length shots. Include at least one full-length photo. I'll sort out which are useful and skip filtered or dim ones.
         </p>
         <label className="drop">
-          <input type="file" accept="image/*" multiple onChange={(e) => addGallery(e.target.files)} />
-          <strong>{busy ? "Adding…" : "Choose from camera roll"}</strong>
+          <input type="file" accept="image/*" multiple onChange={(e) => addGallery(e.currentTarget)} disabled={busy} />
+          <strong>{adding ?? "Choose from camera roll"}</strong>
           <div className="muted small">{gallery.length}/10 added</div>
         </label>
+        {photoNote && <div className="error" role="alert">{photoNote}</div>}
         {gallery.length > 0 && (
           <div className="thumbs">
             {gallery.map((src, i) => (
@@ -147,16 +169,17 @@ export default function Onboarding({ state, update }: Props) {
           <div>✨ Bare face if you can, hair pulled back</div>
         </div>
         <label className="drop">
-          <input type="file" accept="image/*" capture="user" onChange={(e) => single(e.target.files, setSelfie)} />
-          {selfie ? <img src={selfie} alt="Calibration selfie" style={{ maxHeight: 220, margin: "0 auto", borderRadius: 12 }} /> : <strong>Take calibration selfie</strong>}
+          <input type="file" accept="image/*" onChange={(e) => single(e.currentTarget, setSelfie)} />
+          {selfie ? <img src={selfie} alt="Calibration selfie" style={{ maxHeight: 220, margin: "0 auto", borderRadius: 12 }} /> : <strong>{adding ?? "Take or choose calibration selfie"}</strong>}
         </label>
+        {photoNote && <div className="error" role="alert">{photoNote}</div>}
         <details>
           <summary>Optional: inner-wrist photo (separates tan from undertone)</summary>
           <p className="muted small" style={{ marginTop: 8 }}>
             Your inner wrist rarely sees sun, so it shows your baseline color. Photograph it with the same white paper beside it, in the same light.
           </p>
           <label className="drop">
-            <input type="file" accept="image/*" capture="environment" onChange={(e) => single(e.target.files, setWrist)} />
+            <input type="file" accept="image/*" onChange={(e) => single(e.currentTarget, setWrist)} />
             {wrist ? <img src={wrist} alt="Wrist" style={{ maxHeight: 160, margin: "0 auto", borderRadius: 12 }} /> : <strong>Add wrist photo</strong>}
           </label>
         </details>

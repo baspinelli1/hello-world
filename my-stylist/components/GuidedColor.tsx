@@ -17,7 +17,16 @@ export type GuidedResult = {
   photo: string;
 };
 
-type Props = { onDone: (r: GuidedResult) => void; onExit: () => void };
+type Guide = { face: Box; paper: Box; regions: Record<string, Box> };
+/** A color photo kept on the phone so the analysis can be finished later. */
+export type SavedColorPhoto = { photo: string; guide: Guide; date: string };
+
+type Props = {
+  onDone: (r: GuidedResult) => void;
+  onExit: () => void;
+  saved?: SavedColorPhoto | null;
+  onSave?: (s: SavedColorPhoto) => void;
+};
 type Step = "intro" | "camera" | "fallback" | "hair" | "eyes" | "drape" | "reveal";
 
 const HAIR = QUESTIONS.find((q) => q.id === "hair")!;
@@ -33,7 +42,7 @@ function pixelsOf(img: HTMLImageElement) {
   return d;
 }
 
-export default function GuidedColor({ onDone, onExit }: Props) {
+export default function GuidedColor({ onDone, onExit, saved, onSave }: Props) {
   const [step, setStep] = useState<Step>("intro");
   const [error, setError] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -47,7 +56,7 @@ export default function GuidedColor({ onDone, onExit }: Props) {
   const [result, setResult] = useState<GuidedResult | null>(null);
 
   // ----- analysis of a captured photo -----
-  const analyze = useCallback(async (dataUrl: string, guide: { face: Box; paper: Box; regions: Record<string, Box> }) => {
+  const analyze = useCallback(async (dataUrl: string, guide: Guide) => {
     setError(null);
     const img = await loadImage(dataUrl);
     const r = readFace(pixelsOf(img), guide);
@@ -60,9 +69,10 @@ export default function GuidedColor({ onDone, onExit }: Props) {
     setTiles(t);
     setPhoto(dataUrl);
     setReading({ m: r.measurements, cal: r.calibration, face: guide.face });
+    onSave?.({ photo: dataUrl, guide, date: new Date().toISOString() });
     setStep("hair");
     return true;
-  }, []);
+  }, [onSave]);
 
   async function finishDraping(finalVotes: Record<string, Vote>, eyeIdx: number) {
     if (!reading || hair === null || !photo) return;
@@ -89,14 +99,36 @@ export default function GuidedColor({ onDone, onExit }: Props) {
       <div className="stack" style={{ paddingTop: 20 }}>
         <span className="badge part c1">Color</span>
         <h2 style={{ fontSize: 32 }}>Let's find your colors</h2>
-        <p className="muted">A guided selfie, then a quick draping session where you compare colors on your own face.</p>
-        <div className="card flat small stack">
-          <div>☀️ Face a window in daylight (no direct sun)</div>
-          <div>📄 Have a sheet of plain white paper ready</div>
-          <div>✨ Bare face if you can, hair off your face</div>
+        <p className="muted">One selfie with white paper, then a quick draping session where you compare colors on your own face.</p>
+        {saved && (
+          <button className="choice primary" style={{ flexDirection: "row", flexWrap: "nowrap", alignItems: "center", gap: 14 }} onClick={() => analyze(saved.photo, saved.guide)}>
+            <img src={saved.photo} alt="" style={{ width: 64, height: 84, objectFit: "cover", borderRadius: 12, border: "2px solid var(--ink)", flex: "none" }} />
+            <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <strong>Use my photo from earlier</strong>
+              <span className="small">Taken {when(saved.date)}. Pick up where you left off.</span>
+            </span>
+          </button>
+        )}
+        <button className={`choice${saved ? "" : " primary"}`} onClick={() => setStep("camera")}>
+          <strong>Take the photo now</strong>
+          <span className={`small${saved ? " muted" : ""}`}>Guided selfie facing a window in daylight, with white paper in the box.</span>
+        </button>
+        <button className="choice" onClick={() => setStep("fallback")}>
+          <strong>Upload a photo I took earlier</strong>
+          <span className="small muted">A daylight selfie with white paper beside your face. You'll tap 3 spots on it.</span>
+        </button>
+        <ErrorBox error={error} />
+        <div className="notice small">
+          🌙 <strong>No daylight right now?</strong> Take the photo during the day and come back any time. This phone keeps it, so you can finish the draping at night.
         </div>
-        <button className="btn accent block" onClick={() => setStep("camera")}>Open camera</button>
-        <button className="linkish small" style={{ alignSelf: "center" }} onClick={() => setStep("fallback")}>Use a photo I already have</button>
+        <details className="small">
+          <summary className="muted">Tips for the photo</summary>
+          <div className="stack" style={{ marginTop: 8 }}>
+            <div>☀️ Face a window in daylight (no direct sun)</div>
+            <div>📄 Plain white printer paper, flat, next to your cheek</div>
+            <div>✨ Bare face if you can, hair off your face</div>
+          </div>
+        </details>
         <button className="linkish small" style={{ alignSelf: "center" }} onClick={onExit}>← Back</button>
       </div>
     );
@@ -180,6 +212,12 @@ export default function GuidedColor({ onDone, onExit }: Props) {
     </div>
   );
 
+}
+
+function when(iso: string) {
+  const d = new Date(iso), now = new Date();
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return d.toDateString() === now.toDateString() ? `today at ${time}` : `${d.toLocaleDateString([], { month: "short", day: "numeric" })} at ${time}`;
 }
 
 // ---------- Camera with live guide ----------

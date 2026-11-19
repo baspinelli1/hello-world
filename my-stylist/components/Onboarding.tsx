@@ -110,7 +110,14 @@ export default function Onboarding({ state, update }: Props) {
   }
 
   if (step === "guided") {
-    return <GuidedColor onExit={() => setStep("welcome")} onDone={(r) => { setGuided(r); setStep("guidedQuiz"); }} />;
+    return (
+      <GuidedColor
+        saved={state.colorPhoto}
+        onSave={(colorPhoto) => update({ colorPhoto })}
+        onExit={() => setStep("welcome")}
+        onDone={(r) => { setGuided(r); setStep("guidedQuiz"); }}
+      />
+    );
   }
 
   if (step === "guidedQuiz" && guided) {

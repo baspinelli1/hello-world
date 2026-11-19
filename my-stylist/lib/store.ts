@@ -3,6 +3,7 @@
 // on a server; photos only leave the device to be analyzed.
 import type { Critique, Inspo, Look, Profile } from "./schemas";
 import type { EngineResult } from "./image";
+import type { SavedColorPhoto } from "@/components/GuidedColor";
 
 export type ShoppingItem = {
   id: string;
@@ -22,6 +23,7 @@ export type AppState = {
   profile: Profile | null;
   source: "photos" | "guided" | "quiz" | null;
   quizAnswers: Record<string, number> | null;
+  colorPhoto: SavedColorPhoto | null; // daylight photo kept so the analysis can be finished later
   engine: Omit<EngineResult, "drapeGrid"> | null;
   demo: boolean;
   looks: Look[];
@@ -35,7 +37,7 @@ export type AppState = {
 };
 
 export const emptyState: AppState = {
-  height: "", photos: [], profile: null, source: null, quizAnswers: null, engine: null, demo: false, looks: [], liked: [], disliked: [],
+  height: "", photos: [], profile: null, source: null, quizAnswers: null, colorPhoto: null, engine: null, demo: false, looks: [], liked: [], disliked: [],
   owned: [], shopping: [], journal: [], trends: null, inspo: null,
 };
 

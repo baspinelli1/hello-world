@@ -84,6 +84,7 @@ export default function Onboarding({ state, update }: Props) {
     return (
       <div className="stack" style={{ paddingTop: 36 }}>
         <div className="hero-dots" aria-hidden><span /><span /><span /></div>
+        <div className="kicker">Maven · Personal Style Studio</div>
         <h1>Find the style made for you.</h1>
         <p className="lede">Your colors, your body lines and your style essence. Pick how you'd like to start.</p>
         <button className="choice primary" onClick={() => setStep(ai ? "height" : "guided")}>

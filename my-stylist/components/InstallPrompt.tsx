@@ -30,12 +30,12 @@ export default function InstallPrompt() {
 
   if (!show) return null;
   return (
-    <div className="install" role="region" aria-label="Install My Stylist">
+    <div className="install" role="region" aria-label="Install Maven">
       <img src="/icon-192.png" alt="" />
       <div className="grow">
         <strong>Get the app</strong>
         <div className="muted">
-          {ios ? <>Tap the Share button <svg aria-label="Share" width="14" height="17" viewBox="0 0 14 17" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ verticalAlign: "-2px" }}><path d="M7 1v10M3.5 4.5 7 1l3.5 3.5M4 7H2v9h10V7h-2" strokeLinecap="round" strokeLinejoin="round" /></svg>, then <strong>Add to Home Screen</strong>.</> : "Add My Stylist to your home screen."}
+          {ios ? <>Tap the Share button <svg aria-label="Share" width="14" height="17" viewBox="0 0 14 17" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ verticalAlign: "-2px" }}><path d="M7 1v10M3.5 4.5 7 1l3.5 3.5M4 7H2v9h10V7h-2" strokeLinecap="round" strokeLinejoin="round" /></svg>, then <strong>Add to Home Screen</strong>.</> : "Add Maven to your home screen."}
         </div>
       </div>
       {!ios && evt && (

@@ -1,7 +1,7 @@
 {
   "name": "my-stylist",
   "version": "1.0.0",
-  "description": "My Stylist: a technical AI stylist for color, body type and essence",
+  "description": "Maven: Personal Style Studio. A technical AI stylist for color, body type and essence",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

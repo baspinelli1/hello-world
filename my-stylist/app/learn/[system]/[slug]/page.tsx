@@ -19,7 +19,7 @@ async function get(params: Promise<{ system: string; slug: string }>) {
 
 export async function generateMetadata({ params }: { params: Promise<{ system: string; slug: string }> }) {
   const { system, entry } = await get(params);
-  return { title: entry ? `${entry.name} (${SYSTEMS[system].kicker}) · My Stylist` : "My Stylist" };
+  return { title: entry ? `${entry.name} (${SYSTEMS[system].kicker}) · Maven` : "Maven" };
 }
 
 export default async function EntryPage({ params }: { params: Promise<{ system: string; slug: string }> }) {

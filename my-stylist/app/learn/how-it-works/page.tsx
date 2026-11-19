@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "How it works · My Stylist" };
+export const metadata = { title: "How it works · Maven" };
 
 const STEPS = [
   { t: "Calibrate", d: "Phone cameras tint photos warmer or cooler and often underexpose deeper skin. The white paper in your selfie is a known reference, so the app corrects the color and brightness, like a pro calibrating their lights." },
@@ -16,8 +16,8 @@ export default function HowItWorks() {
     <div>
       <div style={{ padding: "18px 0 6px" }}>
         <div className="kicker"><Link href="/learn" style={{ color: "inherit" }}>Learn</Link> · The science</div>
-        <h1>How My Stylist analyzes you</h1>
-        <p className="lede">Most color apps read the raw colors in a photo. My Stylist works like a trained analyst, in six steps.</p>
+        <h1>How Maven analyzes you</h1>
+        <p className="lede">Most color apps read the raw colors in a photo. Maven works like a trained analyst, in six steps.</p>
       </div>
       <ol className="numbered">
         {STEPS.map((s) => (

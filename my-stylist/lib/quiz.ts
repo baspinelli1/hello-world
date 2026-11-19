@@ -324,8 +324,8 @@ export function buildQuizProfile(answers: Answers, measured?: MeasuredColor): Pr
         ? measured.explained
         : `${s.about}${r.color.isOlive ? " Your answers also point to an olive complexion: a green-gold cast that often sits on a neutral or cool base. That's why muted, slightly earthy versions of colors tend to suit you better than bright golden ones." : ""}`,
       why_other_apps_may_differ: measured
-        ? "Most apps read raw photo colors, which your camera tints. My Stylist corrected your photo against white paper first, measured your skin in a scientific color space, and checked the result against your own side-by-side draping."
-        : "A quiz can only go on what you tell it, and lighting, makeup and memory all blur how we see our own coloring. Adding photos lets My Stylist measure your skin directly.",
+        ? "Most apps read raw photo colors, which your camera tints. Maven corrected your photo against white paper first, measured your skin in a scientific color space, and checked the result against your own side-by-side draping."
+        : "A quiz can only go on what you tell it, and lighting, makeup and memory all blur how we see our own coloring. Adding photos lets Maven measure your skin directly.",
       drape_results: measured ? measured.drapes : { best: [], worst: [], observations: "" },
       palette: { neutrals: NEUTRALS[s.slug], core: s.palette, accents: [], avoid: s.avoid },
       metals: fam.metals,

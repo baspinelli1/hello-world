@@ -44,7 +44,7 @@ export default function Home() {
   return (
     <main className="shell">
       <header className="masthead">
-        <p className="brand">My <em>Stylist</em></p>
+        <p className="brand">Maven<em>.</em></p>
         <a href="/learn" className="kicker" style={{ textDecoration: "none" }}>Learn</a>
       </header>
       {!state.profile ? (
@@ -69,7 +69,7 @@ export default function Home() {
             </nav>
           </div>
           <p className="muted small" style={{ textAlign: "center", marginTop: 30 }}>
-            Everything is saved on this device only. <button className="linkish" onClick={async () => { if (confirm("Delete all My Stylist data on this device?")) { await clearState(); location.reload(); } }}>Delete my data</button>
+            Everything is saved on this device only. <button className="linkish" onClick={async () => { if (confirm("Delete all Maven data on this device?")) { await clearState(); location.reload(); } }}>Delete my data</button>
           </p>
         </>
       )}
